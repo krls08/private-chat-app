@@ -1,4 +1,4 @@
-package main
+package routes
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/krls08/private-chat-app/internal/server/handlers"
 )
 
-func routes() http.Handler {
+func Routes() http.Handler {
 	mux := pat.New()
 
 	mux.Get("/", http.HandlerFunc(handlers.Home))

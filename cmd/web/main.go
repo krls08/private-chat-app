@@ -2,14 +2,12 @@ package main
 
 import (
 	"log"
-	"net/http"
+
+	"github.com/krls08/private-chat-app/cmd/web/bootstrap"
 )
 
 func main() {
-	mux := routes()
-
-	log.Println("Starting webserver on port 8080")
-
-	_ = http.ListenAndServe(":8080", mux)
-
+	if err := bootstrap.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
