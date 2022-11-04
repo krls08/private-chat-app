@@ -5,14 +5,17 @@ import (
 	"net/http"
 
 	"github.com/krls08/private-chat-app/cmd/web/routes"
+	"github.com/krls08/private-chat-app/internal/server/handlers"
 )
 
 func Run() error {
-	mux := routes.Routes()
+	mux := routes.Mux()
 
-	log.Println("Starting webserver on port 8080")
+	go handlers.ListenToWsChannel()
 
-	err := http.ListenAndServe(":8080", mux)
+	log.Println("Starting webserver on port 60002")
+
+	err := http.ListenAndServe(":60002", mux)
 	if err != nil {
 		return err
 	}
