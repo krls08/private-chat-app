@@ -9,12 +9,18 @@
     <!-- CSS only -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/notie/4.3.1/notie.min.css"
+        integrity="sha512-UrjLcAek5jbj1vwGbXkviPHtgSNVNQCedX7cBIMDdSI2iZtUcZcoTh2Sqc8R9mVcijOjFUi1IlxhfrE1uWaIog=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         .chatbox {
-            outline: 1px solid goldenrod;
+            outline: 2px solid silver;
             min-height: 160px;
+            max-height: 300px;
             padding: 0.5em;
+            word-break: break-all;
+            overflow-y:scroll;
         }
     </style>
 </head>
@@ -34,7 +40,7 @@
                     <label for="username">Username:</label>
                     <input type="text" name="username" id="username" class="form-control" autocomplete="off">
                 </div>
-                <div class="col-md-6 form-group">
+                <div class="form-group">
                     <label for="message">Message:</label>
                     <input type="text" name="message" id="message" class="form-control" autocomplete="off">
                 </div>
@@ -65,7 +71,12 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
     crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/notie/4.3.1/notie.min.js"
+    integrity="sha512-NHRCwRf2LnVSlLDejCA9oS3fG3/FLSQIPCjAWl3M7tVi5wszwr6FxkjotWnQDXLE+aLKcxRrzFDNEgXj9nvkPw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <script>
+    const psound = new Audio("/static/mixkit-sci-fi-confirmation-914.wav");
     let socket = null;
     let o = document.getElementById("output")
     let userField = document.getElementById("username")
@@ -79,7 +90,8 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        socket = new WebSocket("ws://127.0.0.1:8080/ws")
+        //socket = new WebSocket("ws://127.0.0.1:8080/ws")
+        socket = new WebSocket("ws://83.51.41.164:60002/ws")
 
         socket.onopen = () => {
             console.log("Successfully connected")
@@ -114,14 +126,16 @@
                     }
                     break
                 case "broadcast":
-                    o.innerHTML = o.innerHTML + data.message + "<br>"
+                    //o.innerHTML = o.innerHTML + data.message + "<br>"
+                    o.innerHTML = addDate() + ' - ' + data.message + "<br>" + o.innerHTML
+                    if (data.username != userField.value) psound.play()
+                    console.log(data)
                     break
             }
 
         }
 
-        let userInput = document.getElementById("username")
-        userInput.addEventListener("change", function () {
+        userField.addEventListener("change", function () {
             let jsonData = {}
             jsonData["action"] = "username"
             jsonData["username"] = this.value
@@ -131,20 +145,24 @@
         const sendMessage = () => {
             let jsonData = {}
             jsonData["action"] = "broadcast"
-            jsonData["username"] = document.getElementById("username").value
-            jsonData["message"] = document.getElementById("message").value
+            jsonData["username"] = userField.value
+            jsonData["message"] = messageField.value
             socket.send(JSON.stringify(jsonData))
-            document.getElementById("message").value = ""
+            messageField.value = ""
         }
+         const addDate = () => {
+            const d = new Date()
+            return `[${d.toLocaleString()}]`
+         }
 
-        document.getElementById("message").addEventListener("keydown", function (event) {
+        messageField.addEventListener("keydown", function (event) {
             if (event.code === "Enter") {
                 if (!socket) {
                     console.log("no connection")
                     return false
                 }
                 if ((userField.value === "") || (messageField.value == "")) {
-                    alert("fill out user and message")
+                    errorMessage("fill out user and message")
                     return false
                 } else {
                     sendMessage()
@@ -152,13 +170,12 @@
 
                 event.preventDefault()
                 event.stopPropagation()
-                sendMessage()
             }
         })
 
         document.getElementById("sendBtn").addEventListener("click", () => {
             if ((userField.value === "") || (messageField.value == "")) {
-                alert("fill out user and message")
+                errorMessage("fill out user and message")
                 return false
             } else {
                 sendMessage()
@@ -166,6 +183,13 @@
         })
 
     })
+
+    const errorMessage = (msg) => {
+        notie.alert({
+            type:'error',
+            text: msg,
+        })
+    }
 </script>
 
 </html>

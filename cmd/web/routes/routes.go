@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/bmizerany/pat"
-	"github.com/krls08/private-chat-app/internal/server/handlers"
+	"github.com/krls08/private-chat-app/internal/infrastructure/server/handlers"
 )
 
 func Mux() http.Handler {
@@ -12,6 +12,9 @@ func Mux() http.Handler {
 
 	mux.Get("/", http.HandlerFunc(handlers.Home))
 	mux.Get("/ws", http.HandlerFunc(handlers.WsEndpoint))
+
+	fileServer := http.FileServer(http.Dir("./static/"))
+	mux.Get("/static/", http.StripPrefix("/static", fileServer))
 
 	return mux
 }

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/krls08/private-chat-app/cmd/web/routes"
-	"github.com/krls08/private-chat-app/internal/server/handlers"
+	"github.com/krls08/private-chat-app/internal/infrastructure/server/handlers"
 )
 
 func Run() error {

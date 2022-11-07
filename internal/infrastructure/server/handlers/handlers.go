@@ -43,6 +43,7 @@ type WebsocketConnection struct {
 type WsJsonResponse struct {
 	Action         string   `json:"action"`
 	Message        string   `json:"message"`
+	Username       string   `json:"username"`
 	MessageType    string   `json:"messageType"`
 	ConnectedUsers []string `json:"connectedUsers"`
 }
@@ -61,7 +62,7 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	log.Println("Client connected to endpoint")
+	log.Println("Client connected to endpoint", r.RemoteAddr)
 
 	var response WsJsonResponse
 	response.Message = `<em><small>Connected to server</small></em>`
@@ -123,6 +124,7 @@ func ListenToWsChannel() {
 		case "broadcast":
 			response.Action = "broadcast"
 			response.Message = fmt.Sprintf("<strong>%s</strong>: %s", e.Username, e.Message)
+			response.Username = e.Username
 			broadcastToAll(response)
 		}
 
