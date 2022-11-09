@@ -5,11 +5,18 @@ import (
 	"net/http"
 
 	"github.com/krls08/private-chat-app/cmd/web/routes"
+	"github.com/krls08/private-chat-app/internal/home/service"
 	"github.com/krls08/private-chat-app/internal/infrastructure/server/handlers"
 )
 
 func Run() error {
-	mux := routes.Mux()
+
+	hs := service.NewHomeService()
+	hh := handlers.HomeHandlers{
+		Service: hs,
+	}
+
+	mux := routes.Mux(hh)
 
 	go handlers.ListenToWsChannel()
 

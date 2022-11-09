@@ -8,6 +8,7 @@ import (
 
 	"github.com/CloudyKit/jet/v6"
 	"github.com/gorilla/websocket"
+	"github.com/krls08/private-chat-app/internal/home/service"
 )
 
 var wsChan = make(chan WsPayload)
@@ -27,10 +28,26 @@ var upgradeConnection = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-func Home(w http.ResponseWriter, r *http.Request) {
-	err := renderPage(w, "home.jet", nil)
+type HomeHandlers struct {
+	Service service.HomeService
+}
+
+func NewHomeHandlers(s service.HomeService) *HomeHandlers {
+	return &HomeHandlers{
+		Service: s,
+	}
+}
+
+func (h *HomeHandlers) Home(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("request ip:", r.RemoteAddr)
+	tmpl, err := h.Service.GetTemplate(r.RemoteAddr)
 	if err != nil {
-		log.Println("err")
+		log.Println("err:", err.Error())
+		return
+	}
+	err = renderPage(w, tmpl, nil)
+	if err != nil {
+		log.Println("err", err.Error())
 	}
 
 }

@@ -7,10 +7,11 @@ import (
 	"github.com/krls08/private-chat-app/internal/infrastructure/server/handlers"
 )
 
-func Mux() http.Handler {
+func Mux(h handlers.HomeHandlers) http.Handler {
 	mux := pat.New()
 
-	mux.Get("/", http.HandlerFunc(handlers.Home))
+	//mux.Get("/", http.HandlerFunc(handlers.Home))
+	mux.Get("/", http.HandlerFunc(h.Home))
 	mux.Get("/ws", http.HandlerFunc(handlers.WsEndpoint))
 
 	fileServer := http.FileServer(http.Dir("./static/"))
