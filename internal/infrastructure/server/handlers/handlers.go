@@ -49,7 +49,6 @@ func (h *HomeHandlers) Home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("err", err.Error())
 	}
-
 }
 
 type WebsocketConnection struct {
