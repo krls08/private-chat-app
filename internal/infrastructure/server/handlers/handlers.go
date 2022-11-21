@@ -84,26 +84,28 @@ type WsPayload struct {
 }
 
 // WsEndpoint upgrade connection to websocket
-func WsEndpoint(ctx *gin.Context) {
-	ws, err := upgradeConnection.Upgrade(ctx.Writer, ctx.Request, nil)
-	if err != nil {
-		log.Println(err)
+func WsEndpoint() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		ws, err := upgradeConnection.Upgrade(ctx.Writer, ctx.Request, nil)
+		if err != nil {
+			log.Println(err)
+		}
+
+		log.Println("Client connected to endpoint", ctx.Request.RemoteAddr)
+
+		var response WsJsonResponse
+		response.Message = `<em><small>Connected to server</small></em>`
+
+		conn := WebsocketConnection{Conn: ws}
+		clients[conn] = ""
+
+		err = ws.WriteJSON(response)
+		if err != nil {
+			log.Println(err)
+		}
+
+		go ListenForWS(&conn)
 	}
-
-	log.Println("Client connected to endpoint", ctx.Request.RemoteAddr)
-
-	var response WsJsonResponse
-	response.Message = `<em><small>Connected to server</small></em>`
-
-	conn := WebsocketConnection{Conn: ws}
-	clients[conn] = ""
-
-	err = ws.WriteJSON(response)
-	if err != nil {
-		log.Println(err)
-	}
-
-	go ListenForWS(&conn)
 }
 
 //	func WsEndpoint(w http.ResponseWriter, r *http.Request) {

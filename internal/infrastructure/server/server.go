@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/krls08/private-chat-app/internal/home/service"
 	"github.com/krls08/private-chat-app/internal/infrastructure/server/handlers"
@@ -36,12 +37,16 @@ func New(ctx context.Context, host string, port uint, homeHandlers handlers.Home
 
 func (s *Server) Run(ctx context.Context) error {
 	log.Printf("GIN  listening on %s\n", s.httpAddr)
+
 	return http.ListenAndServe(s.httpAddr, s.engine)
 }
 
 func (s *Server) registerRoutes() {
 	s.engine.GET("/", s.hh.Home_g())
+	s.engine.GET("/ws", handlers.WsEndpoint())
 
-	fileServer := http.FileServer(http.Dir("./static/"))
-	s.engine.GET("/static/", func(c *gin.Context) { http.StripPrefix("/static", fileServer) })
+	//fs := http.FileServer(http.Dir("./static"))
+	//http.Handle("/static/", http.StripPrefix("/static/", fs))
+	s.engine.Use(static.Serve("/static/", static.LocalFile("./static", false)))
+
 }
