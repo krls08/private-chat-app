@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/CloudyKit/jet/v6"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/krls08/private-chat-app/internal/home/service"
 )
@@ -51,6 +52,17 @@ func (h *HomeHandlers) Home(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *HomeHandlers) Home_g() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		//ctx.HTML(http.StatusOK, "home_krls.html", gin.H{"content": "home_krls"})
+		err := renderPage(ctx.Writer, "home_krls.jet", nil)
+		if err != nil {
+			log.Println("err", err.Error())
+		}
+	}
+
+}
+
 type WebsocketConnection struct {
 	*websocket.Conn
 }
@@ -72,13 +84,13 @@ type WsPayload struct {
 }
 
 // WsEndpoint upgrade connection to websocket
-func WsEndpoint(w http.ResponseWriter, r *http.Request) {
-	ws, err := upgradeConnection.Upgrade(w, r, nil)
+func WsEndpoint(ctx *gin.Context) {
+	ws, err := upgradeConnection.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		log.Println(err)
 	}
 
-	log.Println("Client connected to endpoint", r.RemoteAddr)
+	log.Println("Client connected to endpoint", ctx.Request.RemoteAddr)
 
 	var response WsJsonResponse
 	response.Message = `<em><small>Connected to server</small></em>`
@@ -93,6 +105,28 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	go ListenForWS(&conn)
 }
+
+//	func WsEndpoint(w http.ResponseWriter, r *http.Request) {
+//		ws, err := upgradeConnection.Upgrade(w, r, nil)
+//		if err != nil {
+//			log.Println(err)
+//		}
+//
+//		log.Println("Client connected to endpoint", r.RemoteAddr)
+//
+//		var response WsJsonResponse
+//		response.Message = `<em><small>Connected to server</small></em>`
+//
+//		conn := WebsocketConnection{Conn: ws}
+//		clients[conn] = ""
+//
+//		err = ws.WriteJSON(response)
+//		if err != nil {
+//			log.Println(err)
+//		}
+//
+//		go ListenForWS(&conn)
+//	}
 
 func ListenForWS(conn *WebsocketConnection) {
 	defer func() {
