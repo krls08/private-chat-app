@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"text/template"
 
 	"github.com/CloudyKit/jet/v6"
 	"github.com/gin-gonic/gin"
@@ -51,11 +52,38 @@ func (h *HomeHandlers) Home(w http.ResponseWriter, r *http.Request) {
 		log.Println("err", err.Error())
 	}
 }
+func (h *HomeHandlers) Home_n(w http.ResponseWriter, r *http.Request) {
+
+	switch r.Method {
+	case "GET":
+		fmt.Println("request ip:", r.RemoteAddr)
+		tmpl, err := h.Service.GetTemplate(r.RemoteAddr)
+		if err != nil {
+			log.Println("err:", err.Error())
+			return
+		}
+		_ = tmpl
+
+		err = renderTempl(w, "home_krls.html")
+		if err != nil {
+			log.Println("err", err.Error())
+		}
+	default:
+		err := renderTempl(w, "error_page.html")
+		if err != nil {
+			log.Println("err", err.Error())
+		}
+	}
+}
 
 func (h *HomeHandlers) Home_g() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//ctx.HTML(http.StatusOK, "home_krls.html", gin.H{"content": "home_krls"})
-		err := renderPage(ctx.Writer, "home_krls.jet", nil)
+		//		err := renderPage(ctx.Writer, "home_krls.jet", nil)
+		//		if err != nil {
+		//			log.Println("err", err.Error())
+		//		}
+		err := renderTempl(ctx.Writer, "home_krls.html")
 		if err != nil {
 			log.Println("err", err.Error())
 		}
@@ -84,37 +112,36 @@ type WsPayload struct {
 }
 
 // WsEndpoint upgrade connection to websocket
-func WsEndpoint() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		ws, err := upgradeConnection.Upgrade(ctx.Writer, ctx.Request, nil)
-		if err != nil {
-			log.Println(err)
-		}
-
-		log.Println("Client connected to endpoint", ctx.Request.RemoteAddr)
-
-		var response WsJsonResponse
-		response.Message = `<em><small>Connected to server</small></em>`
-
-		conn := WebsocketConnection{Conn: ws}
-		clients[conn] = ""
-
-		err = ws.WriteJSON(response)
-		if err != nil {
-			log.Println(err)
-		}
-
-		go ListenForWS(&conn)
+func WsEndpoint(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgradeConnection.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
 	}
+
+	log.Println("Client connected to endpoint", r.RemoteAddr)
+
+	var response WsJsonResponse
+	response.Message = `<em><small>Connected to server</small></em>`
+
+	conn := WebsocketConnection{Conn: ws}
+	clients[conn] = ""
+
+	err = ws.WriteJSON(response)
+	if err != nil {
+		log.Println(err)
+	}
+
+	go ListenForWS(&conn)
 }
 
-//	func WsEndpoint(w http.ResponseWriter, r *http.Request) {
-//		ws, err := upgradeConnection.Upgrade(w, r, nil)
+//func WsEndpoint() gin.HandlerFunc {
+//	return func(ctx *gin.Context) {
+//		ws, err := upgradeConnection.Upgrade(ctx.Writer, ctx.Request, nil)
 //		if err != nil {
 //			log.Println(err)
 //		}
 //
-//		log.Println("Client connected to endpoint", r.RemoteAddr)
+//		log.Println("Client connected to endpoint", ctx.Request.RemoteAddr)
 //
 //		var response WsJsonResponse
 //		response.Message = `<em><small>Connected to server</small></em>`
@@ -129,6 +156,7 @@ func WsEndpoint() gin.HandlerFunc {
 //
 //		go ListenForWS(&conn)
 //	}
+//}
 
 func ListenForWS(conn *WebsocketConnection) {
 	defer func() {
@@ -219,6 +247,18 @@ func renderPage(w http.ResponseWriter, tmpl string, data jet.VarMap) error {
 	err = view.Execute(w, data, nil)
 	if err != nil {
 		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func renderTempl(w http.ResponseWriter, tmpl string) error {
+	pt, err := template.ParseFiles("./html/" + tmpl)
+	if err != nil {
+		return err
+	}
+	err = pt.Execute(w, nil)
+	if err != nil {
 		return err
 	}
 	return nil
