@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/krls08/private-chat-app/internal/home/service"
 	"github.com/krls08/private-chat-app/internal/infrastructure/server/handlers"
 )
 
@@ -15,7 +14,6 @@ type Server struct {
 	mux      *http.ServeMux
 
 	hh handlers.HomeHandlers
-	hs service.HomeService
 }
 
 func New(ctx context.Context, host string, port uint, homeHandlers handlers.HomeHandlers) Server { //(context.Context, Server) {
